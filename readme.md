@@ -19,3 +19,18 @@ key will abort and return you to dos.
 It is possible to specify a new base address on the command
 line (provided as a hexadecimal number) where it will start
 reading the 16 IO ports starting from that address.
+
+You can also specify both a start and end address (in the
+format `start-end`) or a start and number of ports (in the
+format `start+num`).  For example the following all produce
+the same result:
+
+```
+iopex
+iopex 340
+iopex 340-34f
+iopex 340+10
+```
+
+Note that all values are in hexadecimal and a leading `0x`
+is entirely optional.

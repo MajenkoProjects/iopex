@@ -30,10 +30,19 @@ POSSIBILITY OF SUCH DAMAGE.
 
 Usage:
 
-iopex [<base port>]
+iopex
+iopex <base port>
+iopex <start>-<end>
+iopex <start>+<num>
 
 If the base port is omitted a default value (0x340) is used. The port should
 be specified as a hexadecimal value.
+
+You can specify a start and end port number, separated by a -, or a start
+port and the number of ports to scan separated by a +.
+
+For example the default value can be represented as either 340-34f or as
+340+10 - note all values are hexadecimal, and a leading 0x is optional.
 
 This program will read from the block of 16 IO ports starting at the
 specified base port repeatedly until a key is pressed to terminate the
@@ -46,19 +55,45 @@ program.
 #include <bios.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+void parse_range(char *in, int *start, int *end) {
+	char *minus = strstr(in, "-");
+	char *plus = strstr(in, "+");
+
+	if (minus != NULL) {
+		char *right = minus + 1;
+		*minus = 0;
+		*start = strtoul(in, NULL, 16);
+		*end = strtoul(right, NULL, 16);
+		return;
+	}
+
+	if (plus != NULL) {
+		char *right = plus + 1;
+		*plus = 0;
+		*start = strtoul(in, NULL, 16);
+		*end = *start + strtoul(right, NULL, 16) - 1;
+		return;
+	}
+
+	*start = 0x340;
+	*end = 0x34f;
+}
 
 int main(int argc, char **argv) {
-        int addr = 0x340;
+        int start = 0x340;
+		int end = 0x34f;
         if (argc == 2) {
-                addr = strtoul(argv[1], NULL, 16);
+			parse_range(argv[1], &start, &end);
         }
 
         printf("Twiddling IO ports in the range 0x%03x - 0x%03x\n",
-                addr, addr + 0x0f);
+                start, end);
         printf("Press any key to stop\n");
         while (bioskey(1) == 0) {
-                for (int i = 0; i < 0x10; i++) {
-                        inportb(addr + i);
+                for (int i = start; i <= end; i++) {
+                        inportb(i);
                 }
         }
         bioskey(0);
